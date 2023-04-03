@@ -1,13 +1,16 @@
 import { useState } from "react";
+import { v4 as uuidv4 } from "uuid";
 
 export default function Home() {
   const [question, setQuestion] = useState<string | null>(null);
   const [answer, setAnswer] = useState<string | null>("");
 
   const handleClickOrEnter = () => {
+    const uuid = uuidv4();
+
     setAnswer("");
     const eventSource = new EventSource(
-      `${process.env.NEXT_PUBLIC_GURU_CHAT_GPT_SEARCH_BASE_URL}/search?message=${question}`
+      `${process.env.NEXT_PUBLIC_GURU_CHAT_GPT_SEARCH_BASE_URL}/search?sessionID=${uuid}&message=${question}`
     );
 
     eventSource.onmessage = (event) => {
