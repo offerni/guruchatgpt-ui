@@ -2,24 +2,43 @@ import { useState } from "react";
 
 export default function Home() {
   const [question, setQuestion] = useState<string | null>(null);
-  const [answers, setAnswers] = useState<GuruChatGptResponse | null>(null);
+  const [answer, setAnswer] = useState<string | null>("");
 
   const handleClickOrEnter = () => {
-    fetch(`http://localhost:9091/search?message=${question}`).then(
-      (response) => {
-        response.json().then((resp: GuruChatGptResponse) => {
-          setAnswers(resp);
-        });
-      }
+    setAnswer("");
+    const eventSource = new EventSource(
+      `${process.env.NEXT_PUBLIC_GURU_CHAT_GPT_SEARCH_BASE_URL}/search?message=${question}`
     );
+
+    eventSource.onmessage = (event) => {
+      if (event.data === "[DONE]") {
+        eventSource.close();
+        return;
+      }
+
+      const data = JSON.parse(event.data) as ChatCompletionEventResponse;
+      if (data.choices[0].delta.content) {
+        setAnswer(
+          (currentValue) => `${currentValue}${data.choices[0].delta.content}`
+        );
+      }
+    };
+
+    eventSource.onerror = () => {
+      // closes the connection once the back end is done sending the events
+      eventSource.close();
+    };
+
+    return () => {};
   };
 
   return (
     <>
-      <div className="w-full h-full">
-        <div className="flex justify-center items-center mt-6">
+      <div className="flex flex-col h-screen justify-center items-center w-1/2 mx-auto">
+        <div className="w-full flex justify-center">
           <input
-            className="w-1/2 h-10 border-2"
+            autoFocus
+            className="h-10 w-full border-2 focus:outline-none focus:border-gray-300"
             onChange={(e) => {
               setQuestion(e.target.value);
             }}
@@ -40,10 +59,9 @@ export default function Home() {
             Go
           </button>
         </div>
-        {answers?.choices && (
-          <div className="flex justify-center items-center">
-            {answers.choices[0].message.content}
-          </div>
+
+        {answer && (
+          <div className="flex mt-4 justify-center items-center">{answer}</div>
         )}
       </div>
     </>

@@ -1,24 +1,18 @@
-interface GuruChatGptResponse {
-    id: string;
-    object: string;
-    created: number;
-    choices: Choice[];
-    usage: Usage;
+type ChatCompletionChoice = {
+  delta: Delta
+  index: number;
+  finish_reason: string | null;
+};
+
+type Delta = {
+  role?: string;
+  content?: string;
 }
 
-interface Choice {
-    index: number;
-    message: Message;
-    finish_reason: string;
-}
-
-interface Message {
-    role: string;
-    content: string;
-}
-
-interface Usage {
-    prompt_tokens: number;
-    completion_tokens: number;
-    total_tokens: number;
-}
+type ChatCompletionEventResponse = {
+  id: string;
+  object: string;
+  created: number;
+  model: string;
+  choices: ChatCompletionChoice[];
+};
